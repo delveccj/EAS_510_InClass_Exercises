@@ -2,6 +2,11 @@
 """
 Student Connection Script for BAI SVM Prototype
 Automatically detects Codespace info and connects to professor's server
+
+Usage:
+    python student/connect_to_professor.py                    # Use default server
+    python student/connect_to_professor.py [SERVER_URL]       # Use custom server
+    python student/connect_to_professor.py --test            # Test connection
 """
 
 import os
@@ -12,7 +17,7 @@ from datetime import datetime
 import sys
 
 # Default server configuration
-DEFAULT_SERVER_URL = "https://supreme-xylophone-5wj9xj5qw9376qx-8001.app.github.dev"
+DEFAULT_SERVER_URL = "https://ideal-space-dollop-9gv74g94p56f76qp-8001.app.github.dev"
 
 def get_github_username():
     """Get GitHub username from multiple sources"""
@@ -83,7 +88,11 @@ def detect_chapter():
 
 def get_server_url():
     """Get professor's server URL"""
-    # Check for environment variable first
+    # Check if URL provided as command line argument
+    if len(sys.argv) > 1 and sys.argv[1].startswith('http'):
+        return sys.argv[1]
+    
+    # Check for environment variable
     server_url = os.environ.get('PROFESSOR_SERVER_URL')
     if server_url:
         return server_url
@@ -94,46 +103,22 @@ def get_server_url():
         with open(config_file, 'r') as f:
             return f.read().strip()
     
-    # Ask user for server URL
-    print("🔗 Professor Server Connection")
-    print("=" * 40)
-    print(f"💡 Default server: {DEFAULT_SERVER_URL}")
-    print("   Press Enter to use default, or type a different URL")
-    print()
-    
-    server_url = input(f"Enter professor's server URL [{DEFAULT_SERVER_URL}]: ").strip()
-    if not server_url:
-        server_url = DEFAULT_SERVER_URL
+    # Use default without prompting
+    print(f"🔗 Using default server: {DEFAULT_SERVER_URL}")
     
     # Save for next time
     try:
         with open(config_file, 'w') as f:
-            f.write(server_url)
-        print(f"✅ Server URL saved to {config_file}")
+            f.write(DEFAULT_SERVER_URL)
     except:
         pass
     
-    return server_url
+    return DEFAULT_SERVER_URL
 
 def get_live_share_url():
-    """Get Live Share URL from student"""
-    print("\n🤝 Live Share Connection (Optional)")
-    print("=" * 40)
-    print("💡 To share your workspace with professor:")
-    print("   1. Press Ctrl+Shift+P in VS Code")
-    print("   2. Type 'Live Share: Start Collaboration Session'")
-    print("   3. Copy the generated URL and paste below")
-    print("   4. Or press Enter to skip")
-    print()
-    
-    live_share_url = input("Enter Live Share URL (or press Enter to skip): ").strip()
-    
-    if live_share_url:
-        print("✅ Live Share URL captured!")
-        return live_share_url
-    else:
-        print("⏭️  Skipping Live Share (can add later)")
-        return None
+    """Get Live Share URL from student - auto-skip for streamlined connection"""
+    print("⏭️  Skipping Live Share setup (streamlined mode)")
+    return None
 
 def connect_to_professor():
     """Main connection function"""
