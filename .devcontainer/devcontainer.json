@@ -1,6 +1,6 @@
 {
   "name": "EAS 510 SVM Lab",
-  "image": "mcr.microsoft.com/devcontainers/python:3.11-slim",
+  "image": "mcr.microsoft.com/devcontainers/python:3.11",
   
   "features": {
     "ghcr.io/devcontainers/features/git:1": {}
