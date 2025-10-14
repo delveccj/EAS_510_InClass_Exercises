@@ -1,0 +1,27 @@
+{
+  "name": "EAS 510 SVM Lab",
+  "image": "mcr.microsoft.com/devcontainers/python:3.11-slim",
+  
+  "features": {
+    "ghcr.io/devcontainers/features/git:1": {}
+  },
+  
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-vsliveshare.vsliveshare",
+        "ms-python.python",
+        "ms-python.flake8"
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": "/usr/local/bin/python"
+      }
+    }
+  },
+  
+  "postCreateCommand": "pip install -r SVM/requirements.txt",
+  
+  "forwardPorts": [8000, 8888],
+  
+  "remoteUser": "vscode"
+}
