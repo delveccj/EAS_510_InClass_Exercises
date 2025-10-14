@@ -205,3 +205,15 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# Student-generated outputs
+outputs/
+generated_images/
+student_outputs/
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.svg
+*.pdf
+!images/svm/*.png  # Keep the original educational images
