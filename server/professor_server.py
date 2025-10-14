@@ -179,60 +179,58 @@ DASHBOARD_HTML = '''
             opacity: 0.9;
             margin-top: 10px;
         }
-        .student-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-            gap: 20px;
+        .student-table {
+            width: 100%;
             margin-top: 30px;
-        }
-        .student-card {
-            background: rgba(255,255,255,0.15);
+            background: rgba(255,255,255,0.1);
             border-radius: 15px;
-            padding: 20px;
+            overflow: hidden;
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255,255,255,0.2);
-            transition: transform 0.3s ease;
         }
-        .student-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        .student-table table {
+            width: 100%;
+            border-collapse: collapse;
         }
-        .student-header {
-            display: flex;
-            align-items: center;
-            margin-bottom: 15px;
+        .student-table th {
+            background: rgba(255,255,255,0.2);
+            padding: 15px;
+            text-align: left;
+            font-weight: bold;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+        }
+        .student-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            vertical-align: middle;
+        }
+        .student-table tr:hover {
+            background: rgba(255,255,255,0.1);
         }
         .student-avatar {
-            width: 40px;
-            height: 40px;
+            width: 35px;
+            height: 35px;
             border-radius: 50%;
             background: #3498db;
-            display: flex;
+            display: inline-flex;
             align-items: center;
             justify-content: center;
             font-weight: bold;
-            margin-right: 15px;
-        }
-        .student-name {
-            font-size: 1.3em;
-            font-weight: bold;
+            font-size: 0.9em;
+            margin-right: 10px;
         }
         .student-status {
-            margin-left: auto;
-            padding: 5px 10px;
-            border-radius: 20px;
+            padding: 4px 12px;
+            border-radius: 15px;
             font-size: 0.8em;
             background: #27ae60;
+            color: white;
+            display: inline-block;
         }
-        .student-info {
-            margin: 10px 0;
-            font-size: 0.9em;
-            opacity: 0.9;
-        }
-        .student-actions {
-            margin-top: 15px;
+        .action-buttons {
             display: flex;
-            gap: 10px;
+            gap: 8px;
+            flex-wrap: wrap;
         }
         .btn {
             background: rgba(52, 152, 219, 0.8);
@@ -351,46 +349,67 @@ DASHBOARD_HTML = '''
                 return;
             }
             
-            const grid = document.createElement('div');
-            grid.className = 'student-grid';
-            
-            Object.values(students).forEach(student => {
-                const card = createStudentCard(student);
-                grid.appendChild(card);
-            });
-            
+            const table = createStudentTable(students);
             studentContainer.innerHTML = '';
-            studentContainer.appendChild(grid);
+            studentContainer.appendChild(table);
         }
 
-        function createStudentCard(student) {
-            const card = document.createElement('div');
-            card.className = 'student-card';
+        function createStudentTable(students) {
+            const tableContainer = document.createElement('div');
+            tableContainer.className = 'student-table';
             
-            const initials = student.github_username.substring(0, 2).toUpperCase();
-            
-            card.innerHTML = `
-                <div class="student-header">
-                    <div class="student-avatar">${initials}</div>
-                    <div class="student-name">${student.github_username}</div>
-                    <div class="student-status">${student.status}</div>
-                </div>
-                <div class="student-info">
-                    <div>📋 Codespace: ${student.codespace_name}</div>
-                    <div>📁 Chapter: ${student.chapter}</div>
-                    <div>⏰ Connected: ${new Date(student.timestamp).toLocaleTimeString()}</div>
-                </div>
-                <div class="student-actions">
-                    <a href="${student.codespace_url}" target="_blank" class="btn">🔗 View Codespace</a>
-                    ${student.live_share_url ? 
-                        `<a href="${student.live_share_url}" target="_blank" class="btn btn-success">🤝 Join Live Share</a>` : 
-                        '<span class="btn" style="opacity:0.5">🤝 No Live Share</span>'
-                    }
-                    <button onclick="pingStudent('${student.github_username}')" class="btn btn-success">📡 Ping</button>
-                </div>
+            let tableHTML = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Student</th>
+                            <th>Codespace</th>
+                            <th>Chapter</th>
+                            <th>Status</th>
+                            <th>Connected</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
             `;
             
-            return card;
+            Object.values(students).forEach(student => {
+                const initials = student.github_username.substring(0, 2).toUpperCase();
+                const connectedTime = new Date(student.timestamp).toLocaleTimeString();
+                
+                tableHTML += `
+                    <tr>
+                        <td>
+                            <div style="display: flex; align-items: center;">
+                                <div class="student-avatar">${initials}</div>
+                                <strong>${student.github_username}</strong>
+                            </div>
+                        </td>
+                        <td>${student.codespace_name}</td>
+                        <td>📁 ${student.chapter}</td>
+                        <td><span class="student-status">${student.status}</span></td>
+                        <td>⏰ ${connectedTime}</td>
+                        <td>
+                            <div class="action-buttons">
+                                <a href="${student.codespace_url}" target="_blank" class="btn">🔗 Codespace</a>
+                                ${student.live_share_url ? 
+                                    `<a href="${student.live_share_url}" target="_blank" class="btn btn-success">🤝 Live Share</a>` : 
+                                    '<span class="btn" style="opacity:0.5; cursor:default;">🤝 No Share</span>'
+                                }
+                                <button onclick="pingStudent('${student.github_username}')" class="btn btn-success">📡 Ping</button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            tableHTML += `
+                    </tbody>
+                </table>
+            `;
+            
+            tableContainer.innerHTML = tableHTML;
+            return tableContainer;
         }
 
         function pingStudent(username) {
