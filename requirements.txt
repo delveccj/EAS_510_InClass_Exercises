@@ -1,0 +1,16 @@
+# SVM Module Dependencies
+numpy>=1.21.0
+scikit-learn>=1.0.1
+matplotlib>=3.5.0
+pandas>=1.3.0
+packaging>=21.0
+
+# Server Dependencies
+flask>=2.0.0
+flask-socketio>=5.0.0
+python-socketio>=5.0.0
+eventlet>=0.33.0
+
+# Jupyter/Notebook Support
+jupyter>=1.0.0
+ipywidgets>=7.6.0

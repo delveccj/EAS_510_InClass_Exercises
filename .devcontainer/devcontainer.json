@@ -19,7 +19,7 @@
     }
   },
   
-  "postCreateCommand": "pip install -r SVM/requirements.txt",
+  "postCreateCommand": "pip install -r requirements.txt",
   
   "forwardPorts": [8000, 8888],
   
