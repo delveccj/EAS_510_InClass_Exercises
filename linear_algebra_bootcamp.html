@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Linear Algebra Bootcamp for SVMs</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            line-height: 1.6;
+        }
+        
+        .slide {
+            min-height: 100vh;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            max-width: 1200px;
+            margin: 0 auto;
+            page-break-after: always;
+        }
+        
+        .slide h1 {
+            font-size: 3em;
+            text-align: center;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .slide h2 {
+            font-size: 2.5em;
+            text-align: center;
+            margin-bottom: 40px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            align-items: center;
+        }
+        
+        .content.single {
+            grid-template-columns: 1fr;
+            text-align: center;
+        }
+        
+        .text-content {
+            font-size: 1.4em;
+        }
+        
+        .text-content ul {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .text-content li {
+            background: rgba(255,255,255,0.1);
+            margin: 15px 0;
+            padding: 15px 20px;
+            border-radius: 10px;
+            border-left: 4px solid #00ff88;
+        }
+        
+        .visual-content {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .math-box {
+            background: rgba(0,0,0,0.3);
+            padding: 20px;
+            border-radius: 10px;
+            font-size: 1.8em;
+            text-align: center;
+            margin: 20px 0;
+            border: 2px solid #00ff88;
+        }
+        
+        .highlight {
+            background: rgba(255,255,0,0.3);
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        
+        .analogy {
+            background: rgba(255,165,0,0.2);
+            border-left: 4px solid orange;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+            font-style: italic;
+        }
+        
+        code {
+            background: rgba(0,0,0,0.5);
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .navigation {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+        
+        .nav-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 15px 20px;
+            margin: 5px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1.1em;
+            backdrop-filter: blur(10px);
+        }
+        
+        .nav-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+    </style>
+</head>
+<body>
+    <!-- Slide 1: Vector Norms Explained -->
+    <div class="slide" id="slide1">
+        <h1>📏 Vector Norms Explained</h1>
+        <div class="content">
+            <div class="text-content">
+                <ul>
+                    <li><strong>What is ||w||?</strong> It's the <em>length</em> of vector w</li>
+                    <li><strong>2D Formula:</strong> ||w|| = √(w₁² + w₂²)</li>
+                    <li><strong>3D Formula:</strong> ||w|| = √(w₁² + w₂² + w₃²)</li>
+                    <li><strong>Just like Pythagorean theorem!</strong></li>
+                </ul>
+                
+                <div class="analogy">
+                    💡 <strong>Think of it as:</strong> The distance from the origin (0,0) to the tip of the arrow representing your vector w
+                </div>
+                
+                <div class="math-box">
+                    <strong>Why care about ||w||?</strong><br>
+                    <span class="highlight">Smaller ||w|| = Wider Margin!</span>
+                </div>
+            </div>
+            
+            <div class="visual-content">
+                <div id="norm-plot" style="height: 400px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 2: The Weight Vector w -->
+    <div class="slide" id="slide2">
+        <h1>⚖️ The Weight Vector w</h1>
+        <div class="content">
+            <div class="text-content">
+                <ul>
+                    <li><strong>For 2D data:</strong> w = [w₁, w₂]</li>
+                    <li><strong>w₁:</strong> How much feature 1 matters</li>
+                    <li><strong>w₂:</strong> How much feature 2 matters</li>
+                    <li><strong>Direction:</strong> w points toward positive class</li>
+                </ul>
+                
+                <div class="math-box">
+                    Decision Boundary: <strong>w₁×x₁ + w₂×x₂ + b = 0</strong>
+                </div>
+                
+                <div class="analogy">
+                    🎯 <strong>Intuition:</strong> The weight vector w is like a compass needle - it always points perpendicular to your decision boundary, toward the positive class!
+                </div>
+                
+                <ul>
+                    <li><strong>Bigger |w₁|:</strong> Feature 1 is more important</li>
+                    <li><strong>Bigger |w₂|:</strong> Feature 2 is more important</li>
+                </ul>
+            </div>
+            
+            <div class="visual-content">
+                <div id="weight-plot" style="height: 400px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 3: Finding w -->
+    <div class="slide" id="slide3">
+        <h1>🎩 Finding w: The Magic Behind the Scenes</h1>
+        <div class="content single">
+            <div class="text-content">
+                <h2>Good News: You Don't Solve This by Hand! 🎉</h2>
+                
+                <ul>
+                    <li><strong>Computer uses "Quadratic Programming"</strong> - fancy optimization math</li>
+                    <li><strong>Like finding the lowest point</strong> in a bowl-shaped function</li>
+                    <li><strong>sklearn does this for you</strong> - just call <code>.fit()</code>!</li>
+                </ul>
+                
+                <div class="math-box">
+                    The SVM finds w by minimizing:<br>
+                    <strong>½||w||² + C × (penalty for violations)</strong>
+                </div>
+                
+                <div class="analogy">
+                    🏔️ <strong>Think of it like:</strong> You're blindfolded on a mountain, trying to find the lowest valley. The computer is your GPS - it knows exactly where to go using calculus!
+                </div>
+                
+                <ul>
+                    <li><strong>Your job:</strong> Choose the right C parameter</li>
+                    <li><strong>Computer's job:</strong> Find the optimal w and b</li>
+                    <li><strong>Result:</strong> Best possible decision boundary</li>
+                </ul>
+                
+                <div style="background: rgba(0,255,0,0.2); padding: 20px; border-radius: 10px; margin-top: 30px;">
+                    <h3>📝 In Python:</h3>
+                    <code style="font-size: 1.2em;">
+                        svm = SVC(C=1.0)<br>
+                        svm.fit(X_train, y_train)  # Computer finds w and b<br>
+                        # That's it! 🚀
+                    </code>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 4: Support Vectors Do the Work -->
+    <div class="slide" id="slide4">
+        <h1>💪 Support Vectors Do the Work</h1>
+        <div class="content">
+            <div class="text-content">
+                <ul>
+                    <li><strong>Amazing fact:</strong> Most points are ignored!</li>
+                    <li><strong>Only the closest points</strong> (support vectors) matter</li>
+                    <li><strong>These "support" the decision boundary</strong></li>
+                </ul>
+                
+                <div class="math-box">
+                    <strong>Key Insight:</strong><br>
+                    Move a far-away point → w doesn't change!<br>
+                    Move a support vector → everything changes!
+                </div>
+                
+                <div class="analogy">
+                    🏗️ <strong>Think of it like:</strong> Building a bridge between two cliffs. You only need the edge stones (support vectors) to determine where the bridge goes. The rocks way back on each cliff don't matter at all!
+                </div>
+                
+                <ul>
+                    <li><strong>Support vectors:</strong> Points exactly on the margin</li>
+                    <li><strong>All other points:</strong> Can move freely (as long as they stay on their side)</li>
+                    <li><strong>Efficiency:</strong> Large datasets, few support vectors!</li>
+                </ul>
+            </div>
+            
+            <div class="visual-content">
+                <div id="support-plot" style="height: 400px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <div class="navigation">
+        <button class="nav-btn" onclick="previousSlide()">◀ Previous</button>
+        <button class="nav-btn" onclick="nextSlide()">Next ▶</button>
+        <div style="margin-top: 10px; text-align: center;">
+            <span id="slide-counter">1 / 4</span>
+        </div>
+    </div>
+
+    <script>
+        let currentSlide = 1;
+        const totalSlides = 4;
+
+        function showSlide(n) {
+            // Hide all slides
+            for (let i = 1; i <= totalSlides; i++) {
+                document.getElementById(`slide${i}`).style.display = 'none';
+            }
+            
+            // Show current slide
+            document.getElementById(`slide${n}`).style.display = 'block';
+            document.getElementById('slide-counter').textContent = `${n} / ${totalSlides}`;
+            
+            // Create plots for current slide
+            if (n === 1) createNormPlot();
+            if (n === 2) createWeightPlot();
+            if (n === 4) createSupportPlot();
+        }
+
+        function nextSlide() {
+            if (currentSlide < totalSlides) {
+                currentSlide++;
+                showSlide(currentSlide);
+            }
+        }
+
+        function previousSlide() {
+            if (currentSlide > 1) {
+                currentSlide--;
+                showSlide(currentSlide);
+            }
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'ArrowRight' || event.key === ' ') {
+                nextSlide();
+            } else if (event.key === 'ArrowLeft') {
+                previousSlide();
+            }
+        });
+
+        function createNormPlot() {
+            const w = [3, 4];
+            const norm = Math.sqrt(w[0]*w[0] + w[1]*w[1]);
+            
+            const trace1 = {
+                x: [0, w[0]],
+                y: [0, w[1]],
+                mode: 'lines+markers',
+                line: {color: '#00ff88', width: 4},
+                marker: {size: 10, color: '#00ff88'},
+                name: 'Vector w'
+            };
+            
+            const trace2 = {
+                x: [0, w[0], w[0], 0],
+                y: [0, 0, w[1], 0],
+                mode: 'lines',
+                line: {color: 'orange', width: 2, dash: 'dash'},
+                name: 'Components'
+            };
+
+            const layout = {
+                title: {
+                    text: `Vector w = [${w[0]}, ${w[1]}]<br>||w|| = √(${w[0]}² + ${w[1]}²) = ${norm.toFixed(2)}`,
+                    font: {color: 'white', size: 16}
+                },
+                xaxis: {title: 'w₁', color: 'white', gridcolor: 'rgba(255,255,255,0.3)'},
+                yaxis: {title: 'w₂', color: 'white', gridcolor: 'rgba(255,255,255,0.3)'},
+                paper_bgcolor: 'rgba(0,0,0,0)',
+                plot_bgcolor: 'rgba(0,0,0,0.3)',
+                font: {color: 'white'},
+                showlegend: true
+            };
+
+            Plotly.newPlot('norm-plot', [trace1, trace2], layout);
+        }
+
+        function createWeightPlot() {
+            // Generate sample data
+            const x1 = [-2, -1, -1.5, 1, 2, 1.5];
+            const y1 = [-1, -2, -0.5, 1, 2, 0.5];
+            const x2 = [-1, -0.5, -1.8, 1.5, 2.5, 0.8];
+            const y2 = [1, 2, 1.5, -1, -2, -0.8];
+            
+            // Decision boundary (simplified)
+            const w = [1, -0.5];
+            const b = 0.2;
+            const x_line = [-3, 3];
+            const y_line = x_line.map(x => (-w[0]*x - b) / w[1]);
+            
+            const trace1 = {
+                x: x1, y: y1,
+                mode: 'markers',
+                marker: {size: 12, color: 'red', symbol: 'circle'},
+                name: 'Class -1'
+            };
+            
+            const trace2 = {
+                x: x2, y: y2,
+                mode: 'markers',
+                marker: {size: 12, color: 'blue', symbol: 'square'},
+                name: 'Class +1'
+            };
+            
+            const trace3 = {
+                x: x_line, y: y_line,
+                mode: 'lines',
+                line: {color: '#00ff88', width: 3},
+                name: 'Decision Boundary'
+            };
+            
+            // Weight vector (scaled for visibility)
+            const trace4 = {
+                x: [0, w[0]*2],
+                y: [0, w[1]*2],
+                mode: 'lines+markers',
+                line: {color: 'yellow', width: 4},
+                marker: {size: 8, color: 'yellow'},
+                name: 'Weight Vector w'
+            };
+
+            const layout = {
+                title: {
+                    text: 'Weight Vector w Points Perpendicular to Decision Boundary',
+                    font: {color: 'white', size: 16}
+                },
+                xaxis: {title: 'Feature 1', color: 'white', gridcolor: 'rgba(255,255,255,0.3)'},
+                yaxis: {title: 'Feature 2', color: 'white', gridcolor: 'rgba(255,255,255,0.3)'},
+                paper_bgcolor: 'rgba(0,0,0,0)',
+                plot_bgcolor: 'rgba(0,0,0,0.3)',
+                font: {color: 'white'},
+                showlegend: true
+            };
+
+            Plotly.newPlot('weight-plot', [trace1, trace2, trace3, trace4], layout);
+        }
+
+        function createSupportPlot() {
+            // Generate sample data with clear support vectors
+            const x1 = [-2, -1, -3, -0.5];  // Class -1
+            const y1 = [-1, -2, -0.5, -1.8];
+            const x2 = [2, 1, 3, 0.5];      // Class +1  
+            const y2 = [1, 2, 0.5, 1.8];
+            
+            // Support vectors (closest points)
+            const sv_x = [-0.5, 0.5];
+            const sv_y = [-1.8, 1.8];
+            const sv_class = ['red', 'blue'];
+            
+            const trace1 = {
+                x: x1.filter((_, i) => i !== 3), 
+                y: y1.filter((_, i) => i !== 3),
+                mode: 'markers',
+                marker: {size: 10, color: 'red', opacity: 0.4},
+                name: 'Class -1 (regular points)'
+            };
+            
+            const trace2 = {
+                x: x2.filter((_, i) => i !== 3), 
+                y: y2.filter((_, i) => i !== 3),
+                mode: 'markers',
+                marker: {size: 10, color: 'blue', opacity: 0.4},
+                name: 'Class +1 (regular points)'
+            };
+            
+            const trace3 = {
+                x: sv_x, y: sv_y,
+                mode: 'markers',
+                marker: {
+                    size: 16, 
+                    color: sv_class,
+                    line: {color: 'yellow', width: 3}
+                },
+                name: 'Support Vectors'
+            };
+            
+            // Decision boundary
+            const x_line = [-4, 4];
+            const y_line = [0, 0];
+            
+            const trace4 = {
+                x: x_line, y: y_line,
+                mode: 'lines',
+                line: {color: '#00ff88', width: 3},
+                name: 'Decision Boundary'
+            };
+            
+            // Margin lines
+            const trace5 = {
+                x: x_line, y: x_line.map(x => 1.8),
+                mode: 'lines',
+                line: {color: '#00ff88', width: 1, dash: 'dash'},
+                name: 'Margin'
+            };
+            
+            const trace6 = {
+                x: x_line, y: x_line.map(x => -1.8),
+                mode: 'lines',
+                line: {color: '#00ff88', width: 1, dash: 'dash'},
+                showlegend: false
+            };
+
+            const layout = {
+                title: {
+                    text: 'Only Support Vectors (with yellow rings) Determine the Boundary',
+                    font: {color: 'white', size: 16}
+                },
+                xaxis: {title: 'Feature 1', color: 'white', gridcolor: 'rgba(255,255,255,0.3)'},
+                yaxis: {title: 'Feature 2', color: 'white', gridcolor: 'rgba(255,255,255,0.3)'},
+                paper_bgcolor: 'rgba(0,0,0,0)',
+                plot_bgcolor: 'rgba(0,0,0,0.3)',
+                font: {color: 'white'},
+                showlegend: true
+            };
+
+            Plotly.newPlot('support-plot', [trace1, trace2, trace3, trace4, trace5, trace6], layout);
+        }
+
+        // Initialize
+        showSlide(1);
+    </script>
+</body>
+</html>
