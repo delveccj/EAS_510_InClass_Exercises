@@ -1,0 +1,30 @@
+# NFL Decision Tree Analysis - Requirements
+# =====================================
+
+# Core data science libraries
+pandas>=1.5.0
+numpy>=1.21.0
+matplotlib>=3.5.0
+seaborn>=0.11.0
+
+# Machine learning
+scikit-learn>=1.1.0
+
+# NFL data (compatible with Python 3.9+)
+nfl_data_py>=0.3.0
+
+# Alternative NFL data sources (backup options)
+# nflfastpy>=0.2.0
+# sportsreference>=0.6.0
+
+# Jupyter notebook support (optional)
+jupyter>=1.0.0
+ipykernel>=6.0.0
+
+# Development and testing (optional)
+pytest>=7.0.0
+black>=22.0.0
+flake8>=4.0.0
+
+# Additional visualization (optional)
+plotly>=5.0.0
