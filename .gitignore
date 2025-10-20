@@ -217,3 +217,7 @@ student_outputs/
 *.svg
 *.pdf
 !images/svm/*.png  # Keep the original educational images
+
+audit_log.csv
+
+images

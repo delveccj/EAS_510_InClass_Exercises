@@ -34,6 +34,9 @@ except ImportError:
 import warnings
 warnings.filterwarnings('ignore')
 
+from pathlib import Path
+Path('images/decision_tree').mkdir(parents=True, exist_ok=True)
+
 # Set style for better plots
 plt.style.use('default')
 sns.set_palette("husl")
@@ -224,7 +227,7 @@ class NFLDecisionTreeAnalysis:
         # Select final features
         feature_columns = [
             'is_home', 'total_offense', 'fantasy_performance', 
-            'passing_yards', 'rushing_yards', 'receiving_yards'
+            'passing_yards', 'rushing_yards', 'receiving_yards', 'passing_efficiency'
         ]
         
         self.features = features_df[feature_columns]
@@ -284,6 +287,8 @@ class NFLDecisionTreeAnalysis:
         plt.title("🏈 NFL Game Outcome Decision Tree", fontsize=16, pad=20)
         plt.tight_layout()
         plt.show()
+        plt.savefig('images/decision_tree/decision_tree.png', dpi=300, bbox_inches='tight')
+
     
     def analyze_feature_importance(self):
         """Analyze and visualize feature importance"""
@@ -314,6 +319,7 @@ class NFLDecisionTreeAnalysis:
         plt.grid(axis='x', alpha=0.3)
         plt.tight_layout()
         plt.show()
+        plt.savefig('images/decision_tree/importance.png', dpi=300, bbox_inches='tight')
         
         print("📊 Feature Importance Ranking:")
         for i, (_, row) in enumerate(importance_df.sort_values('importance', ascending=False).iterrows(), 1):
@@ -335,7 +341,7 @@ class NFLDecisionTreeAnalysis:
         print(tree_rules)
     
     def predict_game(self, is_home=1, total_offense=400, fantasy_performance=50, 
-                     passing_yards=280, rushing_yards=120, receiving_yards=200):
+                     passing_yards=280, rushing_yards=120, receiving_yards=200, passing_efficiency=0.043):
         """Predict outcome for a specific game scenario"""
         if self.tree_model is None:
             print("❌ No trained model found. Train a tree first!")
@@ -343,7 +349,7 @@ class NFLDecisionTreeAnalysis:
         
         # Create input array
         game_input = np.array([[is_home, total_offense, fantasy_performance, 
-                              passing_yards, rushing_yards, receiving_yards]])
+                              passing_yards, rushing_yards, receiving_yards, passing_efficiency]])
         
         # Get prediction and probability
         prediction = self.tree_model.predict(game_input)[0]
@@ -409,6 +415,8 @@ class NFLDecisionTreeAnalysis:
         plt.grid(True, alpha=0.3)
         plt.tight_layout()
         plt.show()
+        plt.savefig('images/decision_tree/tree.png', dpi=300, bbox_inches='tight')
+
     
     def confusion_matrix_analysis(self):
         """Analyze model performance with confusion matrix"""
@@ -428,6 +436,7 @@ class NFLDecisionTreeAnalysis:
         plt.title('🏈 Confusion Matrix: Model Performance')
         plt.tight_layout()
         plt.show()
+        plt.savefig('images/decision_tree/confusion_matrix.png', dpi=300, bbox_inches='tight')
         
         # Detailed report
         print("📊 Detailed Performance Report:")
@@ -468,7 +477,8 @@ def main():
         fantasy_performance=55,
         passing_yards=300,
         rushing_yards=120,
-        receiving_yards=200
+        receiving_yards=200,
+        passing_efficiency=0.08
     )
     
     # Compare different tree depths
