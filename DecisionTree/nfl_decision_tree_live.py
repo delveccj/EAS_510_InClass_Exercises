@@ -227,7 +227,7 @@ class NFLDecisionTreeAnalysis:
         # Select final features
         feature_columns = [
             'is_home', 'total_offense', 'fantasy_performance', 
-            'passing_yards', 'rushing_yards', 'receiving_yards', 'passing_efficiency'
+            'passing_yards', 'rushing_yards', 'receiving_yards', 'passing_efficiency', 'rushing_efficiency'
         ]
         
         self.features = features_df[feature_columns]
@@ -349,7 +349,7 @@ class NFLDecisionTreeAnalysis:
         
         # Create input array
         game_input = np.array([[is_home, total_offense, fantasy_performance, 
-                              passing_yards, rushing_yards, receiving_yards, passing_efficiency]])
+                              passing_yards, rushing_yards, receiving_yards, passing_efficiency, rushing_efficiency]])
         
         # Get prediction and probability
         prediction = self.tree_model.predict(game_input)[0]
