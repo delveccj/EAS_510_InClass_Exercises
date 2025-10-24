@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 """
-NFL Decision Tree Analysis
-==========================
+NFL Bagging Analysis
+====================
 
-An in-class exercise for understanding decision trees using real NFL data.
-Students will predict game outcomes based on team statistics.
+An in-class exercise for understanding bagging ensemble methods using real NFL data.
+Students will predict game outcomes using Bootstrap Aggregating with decision trees.
 
 Learning Objectives:
-- Understand how decision trees split on features
-- Interpret tree decisions in a real-world context
-- Visualize and analyze feature importance
-- Explore overfitting and tree depth effects
+- Understand how bagging reduces overfitting
+- Compare single tree vs ensemble performance
+- Interpret feature importance across multiple trees
+- Visualize ensemble decision boundaries
 
 Author: Course Materials - EAS 510 BAI
 """
@@ -19,7 +19,8 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-from sklearn.tree import DecisionTreeClassifier, plot_tree, export_text
+from sklearn.ensemble import BaggingClassifier
+from sklearn.tree import DecisionTreeClassifier
 from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
 try:
@@ -35,14 +36,14 @@ import warnings
 warnings.filterwarnings('ignore')
 
 from pathlib import Path
-Path('images/decision_tree').mkdir(parents=True, exist_ok=True)
+Path('images/ensemble').mkdir(parents=True, exist_ok=True)
 
 # Set style for better plots
 plt.style.use('default')
 sns.set_palette("husl")
 
-class NFLDecisionTreeAnalysis:
-    """Class to handle NFL decision tree analysis"""
+class NFLBaggingAnalysis:
+    """Class to handle NFL bagging ensemble analysis"""
     
     def __init__(self, season=2024):
         """Initialize with specified season"""
@@ -55,7 +56,7 @@ class NFLDecisionTreeAnalysis:
         self.X_test = None
         self.y_train = None
         self.y_test = None
-        self.tree_model = None
+        self.bagging_model = None
         
     def load_data(self):
         """Load and process NFL data"""
@@ -95,7 +96,7 @@ class NFLDecisionTreeAnalysis:
             print(f"📈 Schedule sample:")
             print(schedules[['week', 'home_team', 'away_team', 'home_score', 'away_score']].head(3))
             
-            # Process the data for our decision tree
+            # Process the data for our bagging analysis
             self.process_live_data(weekly_data, team_data, schedules)
             
         except Exception as e:
@@ -104,7 +105,7 @@ class NFLDecisionTreeAnalysis:
             raise
     
     def process_live_data(self, weekly_data, team_data, schedules):
-        """Process live NFL data for decision tree analysis"""
+        """Process live NFL data for bagging analysis"""
         print("🔧 Processing live NFL data...")
         
         # Filter for relevant positions and stats
@@ -203,8 +204,8 @@ class NFLDecisionTreeAnalysis:
         self.schedules = schedules
     
     def prepare_features(self):
-        """Prepare features for decision tree"""
-        print("🔧 Engineering features for decision tree...")
+        """Prepare features for bagging ensemble"""
+        print("🔧 Engineering features for bagging analysis...")
         
         # Create feature matrix
         features_df = self.game_data.copy()
@@ -248,114 +249,247 @@ class NFLDecisionTreeAnalysis:
         print(f"🧪 Test set: {len(self.X_test)} games")
         print(f"⚖️ Win rate - Train: {self.y_train.mean():.1%}, Test: {self.y_test.mean():.1%}")
     
-    def train_tree(self, max_depth=3, min_samples_leaf=5):
-        """Train decision tree model"""
-        print(f"🌳 Training decision tree (max_depth={max_depth})...")
+    def train_bagging_ensemble(self, n_estimators=100, max_samples=100, max_depth=None, min_samples_leaf=5):
+        """Train bagging ensemble model"""
+        print(f"🎒 Training bagging ensemble ({n_estimators} trees)...")
         
-        self.tree_model = DecisionTreeClassifier(
+        # Create base decision tree
+        base_tree = DecisionTreeClassifier(
             max_depth=max_depth,
             min_samples_leaf=min_samples_leaf,
             random_state=42
         )
         
-        self.tree_model.fit(self.X_train, self.y_train)
+        # Create bagging classifier
+        self.bagging_model = BaggingClassifier(
+            estimator=base_tree,
+            n_estimators=n_estimators,
+            max_samples=max_samples,
+            n_jobs=-1,
+            random_state=42
+        )
+        
+        self.bagging_model.fit(self.X_train, self.y_train)
         
         # Evaluate performance
-        train_accuracy = self.tree_model.score(self.X_train, self.y_train)
-        test_accuracy = self.tree_model.score(self.X_test, self.y_test)
+        train_accuracy = self.bagging_model.score(self.X_train, self.y_train)
+        test_accuracy = self.bagging_model.score(self.X_test, self.y_test)
         
         print(f"🎯 Training Accuracy: {train_accuracy:.3f}")
         print(f"🎯 Test Accuracy: {test_accuracy:.3f}")
         
-        return self.tree_model
+        return self.bagging_model
     
-    def visualize_tree(self, figsize=(15, 10)):
-        """Visualize the decision tree"""
-        if self.tree_model is None:
-            print("❌ No trained model found. Train a tree first!")
+    def analyze_ensemble_performance(self):
+        """Comprehensive performance analysis of the bagging ensemble"""
+        if self.bagging_model is None:
+            print("❌ No trained model found. Train a bagging ensemble first!")
             return
         
-        plt.figure(figsize=figsize)
-        plot_tree(
-            self.tree_model,
-            feature_names=self.features.columns,
-            class_names=['Loss', 'Win'],
-            filled=True,
-            rounded=True,
-            fontsize=10
-        )
-        plt.title("🏈 NFL Game Outcome Decision Tree", fontsize=16, pad=20)
+        y_pred = self.bagging_model.predict(self.X_test)
+        y_pred_proba = self.bagging_model.predict_proba(self.X_test)
+        
+        print("=== 🎒 BAGGING ENSEMBLE RESULTS ===")
+        print(f"Number of estimators: {self.bagging_model.n_estimators}")
+        print(f"Max samples per estimator: {self.bagging_model.max_samples}")
+        print(f"Accuracy: {accuracy_score(self.y_test, y_pred):.4f}")
+        
+        print("\n=== CONFUSION MATRIX ===")
+        cm = confusion_matrix(self.y_test, y_pred)
+        print(cm)
+        
+        print("\n=== DETAILED CLASSIFICATION REPORT ===")
+        print(classification_report(self.y_test, y_pred, target_names=['Loss', 'Win']))
+        
+        # Visualize confusion matrix
+        plt.figure(figsize=(8, 6))
+        sns.heatmap(cm, annot=True, fmt='d', cmap='Blues',
+                   xticklabels=['Predicted Loss', 'Predicted Win'],
+                   yticklabels=['Actual Loss', 'Actual Win'])
+        plt.title('🎒 Bagging Ensemble Confusion Matrix')
         plt.tight_layout()
+        plt.savefig('images/ensemble/bagging_confusion_matrix.png', dpi=300, bbox_inches='tight')
         plt.show()
-        plt.savefig('images/decision_tree/decision_tree.png', dpi=300, bbox_inches='tight')
-
     
     def analyze_feature_importance(self):
-        """Analyze and visualize feature importance"""
-        if self.tree_model is None:
-            print("❌ No trained model found. Train a tree first!")
+        """Analyze feature importance across the ensemble"""
+        if self.bagging_model is None:
+            print("❌ No trained model found. Train a bagging ensemble first!")
             return
         
-        importance = self.tree_model.feature_importances_
+        # Calculate average feature importance across all trees
+        importances = np.mean([tree.feature_importances_ for tree in self.bagging_model.estimators_], axis=0)
         feature_names = self.features.columns
         
-        # Create DataFrame for easy plotting
+        print("\n=== ENSEMBLE FEATURE IMPORTANCES ===")
         importance_df = pd.DataFrame({
             'feature': feature_names,
-            'importance': importance
-        }).sort_values('importance', ascending=True)
+            'importance': importances
+        }).sort_values('importance', ascending=False)
         
-        # Plot
+        for i, (_, row) in enumerate(importance_df.iterrows(), 1):
+            print(f"  {i}. {row['feature']}: {row['importance']:.4f}")
+        
+        # Plot feature importance
         plt.figure(figsize=(10, 6))
-        bars = plt.barh(importance_df['feature'], importance_df['importance'])
+        importance_df_sorted = importance_df.sort_values('importance', ascending=True)
+        bars = plt.barh(importance_df_sorted['feature'], importance_df_sorted['importance'])
         
         # Color bars by importance
-        colors = plt.cm.viridis(importance_df['importance'] / importance_df['importance'].max())
+        colors = plt.cm.viridis(importance_df_sorted['importance'] / importance_df_sorted['importance'].max())
         for bar, color in zip(bars, colors):
             bar.set_color(color)
         
-        plt.title('🔍 Feature Importance in NFL Game Prediction', fontsize=14, pad=20)
-        plt.xlabel('Importance Score')
+        plt.title('🔍 Ensemble Feature Importance in NFL Game Prediction', fontsize=14, pad=20)
+        plt.xlabel('Average Importance Score Across All Trees')
         plt.grid(axis='x', alpha=0.3)
         plt.tight_layout()
+        plt.savefig('images/ensemble/bagging_feature_importance.png', dpi=300, bbox_inches='tight')
         plt.show()
-        plt.savefig('images/decision_tree/importance.png', dpi=300, bbox_inches='tight')
-        
-        print("📊 Feature Importance Ranking:")
-        for i, (_, row) in enumerate(importance_df.sort_values('importance', ascending=False).iterrows(), 1):
-            print(f"  {i}. {row['feature']}: {row['importance']:.3f}")
     
-    def print_tree_rules(self):
-        """Print human-readable tree rules"""
-        if self.tree_model is None:
-            print("❌ No trained model found. Train a tree first!")
+    def plot_decision_boundary_2d(self):
+        """Plot decision boundary using the two most important features"""
+        if self.bagging_model is None:
+            print("❌ No trained model found. Train a bagging ensemble first!")
             return
         
-        tree_rules = export_text(
-            self.tree_model,
-            feature_names=list(self.features.columns)
-        )
+        # Get the two most important features
+        importances = np.mean([tree.feature_importances_ for tree in self.bagging_model.estimators_], axis=0)
+        top_features_idx = np.argsort(importances)[-2:]
+        feature_names = self.features.columns[top_features_idx]
         
-        print("📋 Decision Tree Rules:")
-        print("=" * 50)
-        print(tree_rules)
+        # Extract 2D data
+        X_2d = self.X_train.iloc[:, top_features_idx].values
+        y_2d = self.y_train.values
+        
+        # Train a new bagging model on just these 2 features for visualization
+        bagging_2d = BaggingClassifier(
+            estimator=DecisionTreeClassifier(max_depth=3, random_state=42),
+            n_estimators=100,
+            max_samples=100,
+            n_jobs=-1,
+            random_state=42
+        )
+        bagging_2d.fit(X_2d, y_2d)
+        
+        # Create mesh for decision boundary
+        h = 0.02
+        x_min, x_max = X_2d[:, 0].min() - 1, X_2d[:, 0].max() + 1
+        y_min, y_max = X_2d[:, 1].min() - 1, X_2d[:, 1].max() + 1
+        xx, yy = np.meshgrid(np.arange(x_min, x_max, h),
+                            np.arange(y_min, y_max, h))
+        
+        plt.figure(figsize=(15, 5))
+        
+        # Plot decision boundary
+        plt.subplot(1, 3, 1)
+        Z = bagging_2d.predict(np.c_[xx.ravel(), yy.ravel()])
+        Z = Z.reshape(xx.shape)
+        plt.contourf(xx, yy, Z, alpha=0.8, cmap=plt.cm.RdYlBu)
+        scatter = plt.scatter(X_2d[:, 0], X_2d[:, 1], c=y_2d, cmap=plt.cm.RdYlBu, edgecolors='black')
+        plt.xlabel(feature_names[0])
+        plt.ylabel(feature_names[1])
+        plt.title('🎒 Bagging Ensemble - Decision Boundary')
+        plt.colorbar(scatter)
+        
+        # Plot prediction probabilities
+        plt.subplot(1, 3, 2)
+        Z_proba = bagging_2d.predict_proba(np.c_[xx.ravel(), yy.ravel()])[:, 1]
+        Z_proba = Z_proba.reshape(xx.shape)
+        contour = plt.contourf(xx, yy, Z_proba, levels=20, alpha=0.8, cmap=plt.cm.RdYlBu)
+        plt.scatter(X_2d[:, 0], X_2d[:, 1], c=y_2d, cmap=plt.cm.RdYlBu, edgecolors='black')
+        plt.xlabel(feature_names[0])
+        plt.ylabel(feature_names[1])
+        plt.title('🎒 Win Probability Heatmap')
+        plt.colorbar(contour)
+        
+        # Plot individual tree boundaries (sample of 5 trees)
+        plt.subplot(1, 3, 3)
+        for i, tree in enumerate(bagging_2d.estimators_[:5]):
+            Z_tree = tree.predict(np.c_[xx.ravel(), yy.ravel()])
+            Z_tree = Z_tree.reshape(xx.shape)
+            plt.contour(xx, yy, Z_tree, alpha=0.3, colors=['red', 'blue'][i % 2])
+        
+        plt.scatter(X_2d[:, 0], X_2d[:, 1], c=y_2d, cmap=plt.cm.RdYlBu, edgecolors='black')
+        plt.xlabel(feature_names[0])
+        plt.ylabel(feature_names[1])
+        plt.title('Individual Trees (Sample of 5)')
+        
+        plt.tight_layout()
+        plt.savefig('images/ensemble/bagging_decision_boundary.png', dpi=300, bbox_inches='tight')
+        plt.show()
+        
+        print(f"Decision boundary plot saved to: images/ensemble/bagging_decision_boundary.png")
+        print(f"Using features: {feature_names[0]} and {feature_names[1]}")
+    
+    def compare_ensemble_sizes(self, n_estimators_list=[1, 5, 10, 25, 50, 100, 200]):
+        """Compare performance across different ensemble sizes"""
+        print("📊 Comparing ensemble sizes to understand bagging benefits...")
+        
+        results = []
+        for n_est in n_estimators_list:
+            # Create bagging classifier with varying ensemble size
+            bagging = BaggingClassifier(
+                estimator=DecisionTreeClassifier(max_depth=None, random_state=42),
+                n_estimators=n_est,
+                max_samples=100,
+                n_jobs=-1,
+                random_state=42
+            )
+            
+            # Use cross-validation for robust estimates
+            cv_scores = cross_val_score(bagging, self.X_train, self.y_train, cv=5)
+            
+            # Also get test score
+            bagging.fit(self.X_train, self.y_train)
+            test_score = bagging.score(self.X_test, self.y_test)
+            
+            results.append({
+                'n_estimators': n_est,
+                'cv_score': cv_scores.mean(),
+                'cv_std': cv_scores.std(),
+                'test_score': test_score
+            })
+            
+            print(f"  {n_est:>3} trees: CV={cv_scores.mean():.3f}±{cv_scores.std():.3f}, Test={test_score:.3f}")
+        
+        # Plot results
+        results_df = pd.DataFrame(results)
+        
+        plt.figure(figsize=(10, 6))
+        plt.errorbar(results_df['n_estimators'], results_df['cv_score'], 
+                    yerr=results_df['cv_std'], label='Cross-Validation', 
+                    marker='o', capsize=5)
+        plt.plot(results_df['n_estimators'], results_df['test_score'], 
+                label='Test Set', marker='s', linestyle='--')
+        
+        plt.xlabel('Number of Trees in Ensemble')
+        plt.ylabel('Accuracy')
+        plt.title('🎒 Bagging Performance vs Ensemble Size')
+        plt.legend()
+        plt.grid(True, alpha=0.3)
+        plt.tight_layout()
+        plt.savefig('images/ensemble/ensemble_size_comparison.png', dpi=300, bbox_inches='tight')
+        plt.show()
     
     def predict_game(self, is_home=1, total_offense=400, fantasy_performance=50, 
-                     passing_yards=280, rushing_yards=120, receiving_yards=200, passing_efficiency=0.043):
-        """Predict outcome for a specific game scenario"""
-        if self.tree_model is None:
-            print("❌ No trained model found. Train a tree first!")
+                     passing_yards=280, rushing_yards=120, receiving_yards=200, 
+                     passing_efficiency=1.0, rushing_efficiency=1.0):
+        """Predict outcome for a specific game scenario using the ensemble"""
+        if self.bagging_model is None:
+            print("❌ No trained model found. Train a bagging ensemble first!")
             return
         
         # Create input array
         game_input = np.array([[is_home, total_offense, fantasy_performance, 
-                              passing_yards, rushing_yards, receiving_yards, passing_efficiency, rushing_efficiency]])
+                              passing_yards, rushing_yards, receiving_yards, 
+                              passing_efficiency, rushing_efficiency]])
         
         # Get prediction and probability
-        prediction = self.tree_model.predict(game_input)[0]
-        probability = self.tree_model.predict_proba(game_input)[0]
+        prediction = self.bagging_model.predict(game_input)[0]
+        probability = self.bagging_model.predict_proba(game_input)[0]
         
-        print("🔮 Game Prediction:")
+        print("🔮 Ensemble Game Prediction:")
         print(f"   📍 Home field: {'Yes' if is_home else 'No'}")
         print(f"   📊 Total offense: {total_offense} yards")
         print(f"   🏆 Fantasy performance: {fantasy_performance} points")
@@ -366,111 +500,36 @@ class NFLDecisionTreeAnalysis:
         print(f"   🎯 Predicted outcome: {'WIN' if prediction else 'LOSS'}")
         print(f"   📈 Win probability: {probability[1]:.1%}")
         print(f"   📉 Loss probability: {probability[0]:.1%}")
-    
-    def compare_tree_depths(self, depths=[1, 2, 3, 4, 5, None]):
-        """Compare performance across different tree depths"""
-        print("📊 Comparing tree depths to understand overfitting...")
-        
-        results = []
-        for depth in depths:
-            tree = DecisionTreeClassifier(
-                max_depth=depth, 
-                min_samples_leaf=5, 
-                random_state=42
-            )
-            
-            # Use cross-validation for more robust estimates
-            cv_scores = cross_val_score(tree, self.X_train, self.y_train, cv=5)
-            
-            # Also get test score
-            tree.fit(self.X_train, self.y_train)
-            test_score = tree.score(self.X_test, self.y_test)
-            
-            depth_str = str(depth) if depth else "Unlimited"
-            results.append({
-                'depth': depth_str,
-                'cv_score': cv_scores.mean(),
-                'cv_std': cv_scores.std(),
-                'test_score': test_score
-            })
-            
-            print(f"  Depth {depth_str:>9}: CV={cv_scores.mean():.3f}±{cv_scores.std():.3f}, Test={test_score:.3f}")
-        
-        # Plot results
-        results_df = pd.DataFrame(results)
-        
-        plt.figure(figsize=(10, 6))
-        x_pos = range(len(results_df))
-        
-        plt.errorbar(x_pos, results_df['cv_score'], yerr=results_df['cv_std'], 
-                    label='Cross-Validation', marker='o', capsize=5)
-        plt.plot(x_pos, results_df['test_score'], 
-                label='Test Set', marker='s', linestyle='--')
-        
-        plt.xlabel('Tree Depth')
-        plt.ylabel('Accuracy')
-        plt.title('🌳 Tree Performance vs Depth: Finding the Sweet Spot')
-        plt.xticks(x_pos, results_df['depth'])
-        plt.legend()
-        plt.grid(True, alpha=0.3)
-        plt.tight_layout()
-        plt.show()
-        plt.savefig('images/decision_tree/tree.png', dpi=300, bbox_inches='tight')
-
-    
-    def confusion_matrix_analysis(self):
-        """Analyze model performance with confusion matrix"""
-        if self.tree_model is None:
-            print("❌ No trained model found. Train a tree first!")
-            return
-        
-        y_pred = self.tree_model.predict(self.X_test)
-        
-        # Confusion matrix
-        cm = confusion_matrix(self.y_test, y_pred)
-        
-        plt.figure(figsize=(8, 6))
-        sns.heatmap(cm, annot=True, fmt='d', cmap='Blues',
-                   xticklabels=['Predicted Loss', 'Predicted Win'],
-                   yticklabels=['Actual Loss', 'Actual Win'])
-        plt.title('🏈 Confusion Matrix: Model Performance')
-        plt.tight_layout()
-        plt.show()
-        plt.savefig('images/decision_tree/confusion_matrix.png', dpi=300, bbox_inches='tight')
-        
-        # Detailed report
-        print("📊 Detailed Performance Report:")
-        print(classification_report(self.y_test, y_pred, 
-                                  target_names=['Loss', 'Win']))
+        print(f"   🎒 Based on {self.bagging_model.n_estimators} decision trees")
 
 
 def main():
-    """Main function to run the NFL decision tree analysis"""
-    print("🏈 NFL Decision Tree Analysis")
+    """Main function to run the NFL bagging analysis"""
+    print("🎒 NFL Bagging Ensemble Analysis")
     print("=" * 50)
     
     # Initialize analysis
-    nfl_analysis = NFLDecisionTreeAnalysis(season=2024)
+    nfl_analysis = NFLBaggingAnalysis(season=2024)
     
     # Load and prepare data
     nfl_analysis.load_data()
     nfl_analysis.prepare_features()
     nfl_analysis.split_data()
     
-    # Train initial model
-    nfl_analysis.train_tree(max_depth=3)
+    # Train bagging ensemble
+    nfl_analysis.train_bagging_ensemble(n_estimators=100, max_samples=100)
     
-    # Visualizations and analysis
-    print("\n🎨 Generating visualizations...")
-    nfl_analysis.visualize_tree()
+    # Comprehensive analysis
+    print("\n📊 Generating ensemble analysis...")
+    nfl_analysis.analyze_ensemble_performance()
     nfl_analysis.analyze_feature_importance()
     
-    # Print interpretable rules
-    print("\n📋 Tree Rules:")
-    nfl_analysis.print_tree_rules()
+    # Decision boundary visualization
+    print("\n🎨 Creating decision boundary visualization...")
+    nfl_analysis.plot_decision_boundary_2d()
     
     # Example prediction
-    print("\n🔮 Example Prediction:")
+    print("\n🔮 Example Ensemble Prediction:")
     nfl_analysis.predict_game(
         is_home=1,
         total_offense=420,
@@ -478,18 +537,20 @@ def main():
         passing_yards=300,
         rushing_yards=120,
         receiving_yards=200,
-        passing_efficiency=0.08
+        passing_efficiency=1.2,
+        rushing_efficiency=1.1
     )
     
-    # Compare different tree depths
-    print("\n📊 Overfitting Analysis:")
-    nfl_analysis.compare_tree_depths()
+    # Compare different ensemble sizes
+    print("\n📈 Ensemble Size Analysis:")
+    nfl_analysis.compare_ensemble_sizes()
     
-    # Confusion matrix
-    print("\n🎯 Performance Analysis:")
-    nfl_analysis.confusion_matrix_analysis()
-    
-    print("\n✅ Analysis complete! Ready for class discussion.")
+    print("\n✅ Bagging analysis complete! Ready for class discussion.")
+    print("\n🎒 Key Takeaways:")
+    print("   • Bagging reduces overfitting by averaging multiple trees")
+    print("   • Each tree sees a different bootstrap sample of the data")
+    print("   • Ensemble predictions are more stable than single trees")
+    print("   • Feature importance is averaged across all trees")
 
 
 if __name__ == "__main__":

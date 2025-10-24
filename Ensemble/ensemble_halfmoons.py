@@ -7,7 +7,7 @@ from sklearn.metrics import accuracy_score, classification_report, confusion_mat
 import numpy as np
 import time
 
-samples = (500, 5000, 50000, 500000)
+samples = (500, 5000, 50000)
 
 for sample in samples:
     print(sample)
@@ -19,8 +19,10 @@ for sample in samples:
         estimators=[
             ('lr', LogisticRegression(random_state=42)),
             ('rf', RandomForestClassifier(random_state=42)),
-            ('svc', SVC(random_state=42))
-        ]
+            ('svc', SVC(random_state=42,probability=True))
+        ],
+        voting='soft',
+        verbose=True
     )
     voting_clf.fit(X_train, y_train)
     end = time.time()
