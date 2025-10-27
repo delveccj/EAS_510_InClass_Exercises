@@ -23,7 +23,7 @@ bag_clf = BaggingClassifier(
     max_samples=100,
     n_jobs=-1,
     random_state=42,
-    bootstrap=True
+    bootstrap=False
 )
 
 # Train the model

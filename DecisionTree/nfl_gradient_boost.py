@@ -363,7 +363,7 @@ class NFLBoostingComparison:
             return
         
         # Create comprehensive figure
-        plt.figure(figsize=(16, 12))
+        fig = plt.figure(figsize=(16, 12))
         
         # 1. Learning progression
         plt.subplot(2, 3, 1)
@@ -398,11 +398,7 @@ class NFLBoostingComparison:
         """Plot how each algorithm improves over time"""
         # Get staged predictions for both algorithms
         ada_staged = list(self.adaboost_model.staged_score(self.X_test, self.y_test))
-        
-        # For Gradient Boosting, we need to calculate accuracy from staged_predict
-        gb_staged = []
-        for pred in self.gradient_boosting_model.staged_predict(self.X_test):
-            gb_staged.append(accuracy_score(self.y_test, pred))
+        gb_staged = list(self.gradient_boosting_model.staged_score(self.X_test, self.y_test))
         
         estimators = range(1, len(ada_staged) + 1)
         
@@ -438,6 +434,10 @@ class NFLBoostingComparison:
         gb_pred = self.gradient_boosting_model.predict(self.X_test)
         
         ada_cm = confusion_matrix(self.y_test, ada_pred)
+        gb_cm = confusion_matrix(self.y_test, gb_pred)
+        
+        # Combined confusion matrix visualization
+        combined_cm = np.array([[ada_cm[0,0], ada_cm[0,1]], [gb_cm[0,0], gb_cm[0,1]]])
         
         sns.heatmap(ada_cm, annot=True, fmt='d', cmap='Blues', alpha=0.7,
                    xticklabels=['Loss', 'Win'], yticklabels=['Loss', 'Win'])
