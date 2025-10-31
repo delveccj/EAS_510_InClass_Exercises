@@ -52,8 +52,8 @@ ada_classifier.fit(X_train, y_train)
 # 2. Gradient Boosting Classifier
 print("🌟 Training Gradient Boosting Ensemble...")
 gb_classifier = GradientBoostingClassifier(
-    max_depth=3,  # Slightly deeper trees than stumps
-    n_estimators=50,
+    max_depth=4,  # Slightly deeper trees than stumps
+    n_estimators=100,
     learning_rate=0.1,  # Lower learning rate for GB
     random_state=42
 )

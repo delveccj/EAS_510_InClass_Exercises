@@ -45,7 +45,7 @@ dt_classifier.fit(X_train, y_train)
 # 2. AdaBoost with Decision Tree stumps
 print("🚀 Training AdaBoost Ensemble...")
 ada_classifier = AdaBoostClassifier(
-    estimator=DecisionTreeClassifier(max_depth=1),  # Stumps!
+    estimator=DecisionTreeClassifier(max_depth=2),  # Stumps!
     n_estimators=50,
     learning_rate=1.0,
     random_state=42
